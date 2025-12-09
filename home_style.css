@@ -1,0 +1,202 @@
+/* --- 引入自定义字体 (放在文件最开头) --- */
+@font-face {
+    font-family: 'Giordano';
+    /* 注意：这里假设你的字体文件名是 Giordano.ttf 且放在 assets 文件夹里。
+       如果是 .otf 格式，请把后缀改为 .otf
+    */
+    src: url('assets/GiordanoGold-Serif.otf'); 
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* 基础设置 */
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #DED1BA;
+    overflow: hidden;
+    font-family: 'Courier New', Courier, monospace;
+    cursor: pointer;
+}
+
+/* 前景文字 */
+#title-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 100;
+    text-align: center;
+    color: #5B4C3A;
+    pointer-events: none;
+    mix-blend-mode: difference;
+    width: 100%;
+}
+
+#title-container h1 {
+    font-family: 'Giordano', sans-serif;
+    font-size: 48px; 
+    letter-spacing: 0.3em;
+    font-weight: 400;
+    margin: 0;
+    opacity: 0;
+    animation: text-fade-in 1.0s ease-out 0.5s forwards;
+}
+
+/* --- 动画定义 --- */
+@keyframes stack-entry {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1.05);
+    }
+    100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+@keyframes text-fade-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- 图片容器 --- */
+#image-deck {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+/* --- 图片通用样式 (现在是 A 标签) --- */
+.deck-image {
+    /* 确保 A 标签表现为块级元素 */
+    display: block; 
+    text-decoration: none; /* 去掉下划线 */
+    
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    transform-origin: center center;
+    
+    /* 尺寸设置 */
+    height: 42vh; 
+    width: auto;
+    aspect-ratio: 768 / 998;
+    
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    
+    opacity: 0;
+    
+    /* 阴影 */
+    box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1);
+    
+    animation-name: stack-entry;
+    animation-duration: 1.2s;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    animation-fill-mode: forwards;
+
+    transition: all 1.5s cubic-bezier(0.19, 1, 0.22, 1);
+    will-change: transform, opacity, top, left, box-shadow;
+}
+
+/* === 颜色蒙版 (Mask) === */
+.deck-image::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #DED1BA; 
+    opacity: 0.5; 
+    transition: opacity 0.5s ease; /* 蒙版消失的过渡时间 */
+    pointer-events: none; /* 让鼠标事件穿透蒙版，直接作用于 A 标签 */
+}
+
+
+/* --- 散开后通用状态 --- */
+#image-deck.scattered .deck-image {
+    transform: translate(-50%, -50%) rotate(0deg) !important;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15); 
+    opacity: 1 !important;
+    height: 30vh; 
+    
+    /* 散开后，让原图变亮回正常状态，但此时上面还有蒙版 */
+    filter: brightness(1) !important;
+}
+
+/* === 核心交互：散开后的蒙版逻辑 === */
+
+/* 1. 默认散开状态：蒙版依然存在 (opacity: 0.5)，无需额外代码，因为默认就是 0.5 */
+
+/* 2. 鼠标悬停 (Hover) 状态：图片在原地稍微放大，增加层级 */
+#image-deck.scattered .deck-image:hover {
+    z-index: 100; /* 确保悬停的图片浮在最上面 */
+    box-shadow: 0 25px 50px rgba(0,0,0,0.3); /* 阴影加深，增加悬浮感 */
+    
+    /* 核心修改：
+       translate(-50%, -50%) -> 保持严格居中（原地）
+       scale(1.05) -> 放大 5%
+    */
+    transform: translate(-50%, -50%) scale(1.05) rotate(0deg) !important;
+    
+    transition: all 0.3s ease-out; /* 动画流畅 */
+}
+
+/* 3. 鼠标悬停 (Hover) 状态：蒙版消失，显示原图 */
+#image-deck.scattered .deck-image:hover::after {
+    opacity: 0;
+}
+
+
+/* =========================================
+   图片独立定义 (位置 & 延迟)
+========================================= */
+
+/* 图片 1 (Top / Cover) */
+.img-1 { z-index: 10; animation-delay: 1.1s; height: 44vh; }
+#image-deck.scattered .img-1 { top: 20%; left: 68%; height: 35vh; transition-delay: 0s; }
+
+/* 图片 2 */
+.img-2 { z-index: 9; animation-delay: 1.0s; height: 43vh; }
+#image-deck.scattered .img-2 { top: 15%; left: 24%; height: 28vh; transition-delay: 0.05s; }
+
+/* 图片 3 */
+.img-3 { z-index: 8; animation-delay: 0.9s; height: 42vh; }
+#image-deck.scattered .img-3 { top: 76%; left: 14%; height: 32vh; transition-delay: 0.1s; }
+
+/* 图片 4 */
+.img-4 { z-index: 7; animation-delay: 0.8s; height: 41vh; }
+#image-deck.scattered .img-4 { top: 70%; left: 88%; height: 26vh; transition-delay: 0.15s; }
+
+/* 图片 5 */
+.img-5 { z-index: 6; animation-delay: 0.7s; height: 42vh; }
+#image-deck.scattered .img-5 { top: 18%; left: 45%; height: 25vh; transition-delay: 0.1s; }
+
+/* 图片 6 */
+.img-6 { z-index: 5; animation-delay: 0.6s; height: 40vh; }
+#image-deck.scattered .img-6 { top: 80%; left: 35%; height: 28vh; transition-delay: 0.15s; }
+
+/* 图片 7 */
+.img-7 { z-index: 4; animation-delay: 0.5s; height: 43vh; }
+#image-deck.scattered .img-7 { top: 30%; left: 92%; height: 24vh; transition-delay: 0.05s; }
+
+/* 图片 8 */
+.img-8 { z-index: 3; animation-delay: 0.4s; height: 39vh; }
+#image-deck.scattered .img-8 { top: 85%; left: 70%; height: 26vh; transition-delay: 0.1s; }
+
+/* 图片 9 */
+.img-9 { z-index: 2; animation-delay: 0.3s; height: 41vh; }
+#image-deck.scattered .img-9 { top: 36%; left: 7%; height: 22vh; transition-delay: 0.15s; }
+
+/* 图片 10 (Bottom) */
+.img-10 { z-index: 1; animation-delay: 0.2s; height: 40vh; }
+#image-deck.scattered .img-10 { top: 75%; left: 55%; height: 20vh; transition-delay: 0.05s; }

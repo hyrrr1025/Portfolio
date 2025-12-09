@@ -1,0 +1,450 @@
+@font-face {
+    font-family: 'Giordano';
+    src: url('assets/GiordanoGold-Serif.otf'); 
+    font-weight: normal;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'Afacad';
+    src: url('assets/Afacad-Regular.ttf'); 
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* --- 基础设置 --- */
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #1a1a1a; /* 浏览器背景，深色显得高级 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Giordano Gold', 'Afacad';
+
+    /* === 新增：初始状态设为完全透明 === */
+    opacity: 0;
+    
+    /* === 新增：应用渐显动画 === */
+    /* 解析：
+       page-fade-in: 动画名称（在下面定义）
+       0.8s: 动画持续时间（你可以根据需要调整快慢，比如 0.5s 或 1s）
+       ease-out: 动画曲线，结束时变慢，比较自然
+       0.1s: 延迟 0.1秒开始，给 JS 的缩放计算留一点点时间，防止画面闪烁
+       forwards: 动画结束后保持最后一帧的状态（也就是保持 opacity: 1）
+    */
+    animation: page-fade-in 1.0s ease-out 0.1s forwards;
+}
+
+/* --- 缩放器 --- */
+#scaler {
+    width: 1920px;
+    height: 1080px;
+    
+    /* 从 relative 改为 absolute，脱离文档流，防止撑大页面导致错位 */
+    position: absolute;
+    
+    /* 强制定位到屏幕正中心 */
+    top: 50%;
+    left: 50%;
+    
+    /* 使用负边距将元素的中心点拉回屏幕中心 */
+    /* 数值分别是宽度的一半 (1920/2) 和高度的一半 (1080/2) */
+    margin-left: -960px;
+    margin-top: -540px;
+
+    transform-origin: center center;
+}
+
+/* --- 书本容器 --- */
+.book-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    perspective: 4000px; /* 3D透视，数值越大越像平面 */
+    /* 用户指定的背景色，作为所有页面的底色 */
+    background-color: #DED1BA; 
+}
+
+/* --- 通用页面样式 (960x1080) --- */
+/* 所有的“半页”都是这个尺寸 */
+.page-content {
+    width: 960px;
+    height: 1080px;
+    background-color: #DED1BA; /* 每一页纸的颜色 */
+    position: absolute;
+    top: 0;
+    overflow: hidden; /* 防止元素溢出 */
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.05); /* 纸张质感内阴影 */
+}
+
+/* --- 底层左页 (永远不动的基座) --- */
+.static-left-base {
+    left: 0;
+    z-index: 0;
+    border-right: 1px solid rgba(0,0,0,0.1); /* 中缝线 */
+}
+
+/* --- 可翻动的纸张 (Paper) --- */
+.paper {
+    width: 960px;
+    height: 1080px;
+    position: absolute;
+    left: 960px; /* 纸张转轴在屏幕正中间 */
+    top: 0;
+    transform-style: preserve-3d;
+    transform-origin: left center; /* 关键：绕左侧边缘旋转 */
+    transition: transform 1.6s cubic-bezier(0.645, 0.045, 0.355, 1); /* 拟真翻页曲线 */
+}
+
+/* 纸张的正面和背面 */
+.front, .back {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden; /* 背面不可见 */
+    background-color: #DED1BA;
+}
+
+.front {
+    z-index: 2;
+    /* 正面就是正常的右页 */
+}
+
+.back {
+    z-index: 1;
+    transform: rotateY(180deg); /* 背面预先旋转180度 */
+    /* 背面对应的是下一页的左边，所以虽然它在右边的DOM里，但翻过来后就是左页 */
+    box-shadow: 5px 0 15px rgba(0,0,0,0.1);
+}
+
+/* 翻页状态：整张纸旋转 -180度 */
+.paper.flipped {
+    transform: rotateY(-180deg);
+}
+
+/* --- 元素交互与定位 (模拟 Figma) --- */
+.element {
+    position: absolute;
+}
+
+/* === Page 1 元素 === */
+/* 瓶子在左页 (0-960) */
+/* 假设 Figma X=760 */
+.p1-bottle {
+    top: 0px;
+    left: 40px; /* 在左页容器内的相对位置 */
+    width: 668px;
+
+    /*position: absolute;
+    left: 2.08%;
+    right: 63.12%;
+    top: 0%;
+    bottom: 0%;*/
+}
+.p1-logo {
+    position: absolute;
+    height: 295px;
+    left: 2.2%;
+    top: 787px;
+}
+
+/* 文字在右页 (960-1920) */
+.p1-title {
+    position: absolute;
+    width: 577px;
+    height: 101px;
+    left: 315px;
+    top: 540px;
+
+    font-family: 'Giordano';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 128px;
+    line-height: 79%;
+    /* or 101px */
+    text-align: center;
+
+    color: #311E06;
+}
+.p1-text {
+    position: absolute;
+    width: 308px;
+    height: 32px;
+    left: 584px;
+    top: 657px;
+
+    font-family: 'Giordano', sans-serif;
+    font-style: normal;
+    font-weight: 400;
+    font-size: 40px;
+    line-height: 79%;
+    /* identical to box height, or 32px */
+    text-align: center;
+}
+
+/* === Page 2 元素 === */
+/* 玫瑰在左页 (Paper 1 的 Back) */
+.p2-rose {
+    top: 324px;
+    left: 297px;
+    width: 332px;
+}
+.back1-text{
+    position: absolute;
+    left: 33.64%;
+    right: 34.33%;
+    top: 64.35%;
+    bottom: 23.33%;
+
+    font-family: 'Afacad';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 18px;
+    line-height: 22px;
+}
+/* 文字在右页 (Paper 2 的 Front) */
+.p2-text{
+    position: absolute;
+    left: 265px;
+    right: 0px;
+    top: 365px;
+    bottom: 54.91%;
+
+    font-family: 'Afacad';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 18px;
+    line-height: 22px;
+}
+
+.p2-perfume{
+    position: absolute;
+    left: 27%;
+    right: 0%;
+    top: 48.33%;
+    bottom: 12.13%;
+}
+
+/* === Page 3 元素 === */
+.p3-logo-img{
+    position: absolute;
+    width: 634px;
+    height: 357px;
+    left: 0px;
+    top: 90px;
+}
+
+/* 右半部分 (在 Paper 3 Front) */
+.p3-candle {
+    /*top: 400px;
+    left: 200px;
+    width: 300px;*/
+
+    position: absolute;
+    width: 1179px;
+    height: 546px;
+    left: -243px;
+    top: 534px;
+}
+
+.p3-title1{
+    position: absolute;
+    width: 90px;
+    height: 17px;
+    left: -243px;
+    top: 227px;
+
+    font-family: 'Afacad';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 17px;
+    /* identical to box height */
+
+    color: #000000;
+}
+.p3-text1{
+    position: absolute;
+    width: 918px;
+    height: 57px;
+    left: -243px;
+    top: 246px;
+
+    font-family: 'Afacad';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 18px;
+    line-height: 19px;
+
+    color: #000000;
+}
+
+.p3-title2{
+    position: absolute;
+    width: 30px;
+    height: 17px;
+    left: -243px;
+    top: 416px;
+
+    font-family: 'Afacad';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 17px;
+    /* identical to box height */
+
+    color: #000000;
+}
+.p3-text2{
+    position: absolute;
+    width: 40px;
+    height: 19px;
+    left: -243px;
+    top: 439px;
+
+    font-family: 'Afacad';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 18px;
+    line-height: 19px;
+
+    color: #000000;
+}
+
+.p3-title3{
+    position: absolute;
+    width: auto;
+    height: 17px;
+    left: 168px;
+    top: 416px;
+
+    font-family: 'Afacad';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 17px;
+    /* identical to box height */
+
+    color: #000000;
+}
+.p3-text3{
+    position: absolute;
+    width: 100px;
+    height: 19px;
+    left: 168px;
+    top: 439px;
+
+    font-family: 'Afacad';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 18px;
+    line-height: 19px;
+
+    color: #000000;
+}
+
+.p3-title4{
+    position: absolute;
+    width: 60px;
+    height: 17px;
+    left: 632px;
+    top: 416px;
+
+    font-family: 'Afacad';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 17px;
+    /* identical to box height */
+
+    color: #000000;
+}
+.p3-text4{
+    position: absolute;
+    width: 82px;
+    height: 38px;
+    left: 632px;
+    top: 439px;
+
+    font-family: 'Afacad';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 18px;
+    line-height: 19px;
+
+    color: #000000;
+}
+
+/* 1. 恢复容器的裁剪，保证翻页不穿帮 */
+#paper-3 .front {
+    overflow: hidden !important; 
+}
+#paper-2 .back {
+    overflow: hidden !important; /* 左页也要裁剪，防止多出的部分跑到书外面 */
+}
+
+/* 2. 定义“左半身”的位置 */
+/* 计算公式：页面宽度(960) + 你的负偏移量(-243) = 717px */
+.left-part {
+    left: 717px !important; 
+    /* top, width, height 等其他属性会自动继承原有的 class，不需要重写 */
+}
+
+/* 特殊微调：如果文字或图片在左页被裁切得不对，可以在这里微调 */
+/* 目前理论上 717px 能让左右两边完美无缝拼接 */
+
+/* --- 隐形热区 --- */
+.click-zone {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    width: 15%; /* 屏幕两侧 15% 区域可点击 */
+    z-index: 9999;
+    cursor: pointer;
+}
+#zone-left { left: 0; }
+#zone-right { right: 0; }
+
+/* === 新增：页面渐显动画定义 === */
+@keyframes page-fade-in {
+    from {
+        opacity: 0;
+        /* 可选：如果你想让它稍微有点向上浮现的感觉，可以加上下面这句 */
+        /* transform: translateY(20px); */ 
+    }
+    to {
+        opacity: 1;
+        /* 可选：配合上面的 translateY */
+        /* transform: translateY(0); */
+    }
+}
+
+/* === 新增：回到主页按钮样式 === */
+.back-home {
+    position: fixed; /* 固定在屏幕，不随书本缩放 */
+    top: 20px;
+    left: 50px;
+    z-index: 10000; /* 确保层级最高，能点得到 */
+    
+    /* 字体风格：保持一致的高级感 */
+    font-family: 'Giordano Gold', 'Courier New', serif;
+    font-size: 16px;
+    letter-spacing: 0.2em;
+    color: #311E06;
+    text-decoration: none;
+    text-transform: uppercase;
+    
+    opacity: 0.6; /* 默认稍微淡一点，不抢视觉重心 */
+    transition: all 0.4s ease;
+}
+
+/* 鼠标悬停效果 */
+.back-home:hover {
+    opacity: 1; /* 变亮 */
+    letter-spacing: 0.3em;
+}
